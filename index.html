@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spaceman Game & Bot Predictor</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #151515;
+            color: #fff;
+            text-align: center;
+            padding: 20px;
+        }
+        .multiplier {
+            font-size: 48px;
+            margin: 20px;
+        }
+        input, button {
+            padding: 10px;
+            font-size: 16px;
+            margin: 10px;
+        }
+        #spaceman-container {
+            position: relative;
+            height: 250px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #spaceman {
+            width: 200px;
+            position: absolute;
+        }
+        .btn {
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.15s ease-in-out;
+        }
+        .btn:active {
+            transform: scale(0.96);
+            opacity: 0.9;
+        }
+        #bot-box {
+            background-color: #222;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-line;
+            font-size: 13px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+        @keyframes floatSpaceman {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+        }
+        .floating {
+            animation: floatSpaceman 1.5s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body>
+    <h1>🚀 Spaceman Game 🚀</h1>
+    <div id="spaceman-container">
+        <img src="https://i.postimg.cc/4y4Hgfsb/spaceman.gif" id="spaceman" alt="Spaceman">
+    </div>
+    <input type="number" id="bet" placeholder="Masukkan Taruhan Anda">
+    <button onclick="startGame()" id="start-btn">Mulai</button>
+    <div class="multiplier" id="multiplier">1.00x</div>
+    <button onclick="tarikSetengah()" disabled id="half-btn">Tarik Setengah</button>
+    <button onclick="tarikSemua()" disabled id="all-btn">Tarik Semua</button>
+    <p id="hasil"></p>
+
+    <hr>
+
+    <div>
+        <h2>BOT PREDIKSI SPACEMAN</h2>
+        <input type="text" id="username" placeholder="Masukkan Username Game">
+        <button class="btn" onclick="startBot()">Mulai Bot</button>
+        <div id="bot-box"></div>
+    </div>
+
+    <script>
+        let multiplier = 1.00;
+        let bet, interval, crashPoint, currentBet;
+
+        function formatRupiah(angka) {
+            return angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        }
+
+        function startGame() {
+            bet = parseFloat(document.getElementById('bet').value);
+            if (!bet || bet <= 0) {
+                alert('Masukkan nilai taruhan yang valid!');
+                return;
+            }
+
+            currentBet = bet;
+            multiplier = 1.00;
+            crashPoint = (Math.random() * 8 + 1.5).toFixed(2);
+
+            document.getElementById('half-btn').disabled = false;
+            document.getElementById('all-btn').disabled = false;
+            document.getElementById('start-btn').disabled = true;
+            document.getElementById('hasil').innerText = '';
+
+            interval = setInterval(() => {
+                multiplier += 0.01;
+                multiplier = parseFloat(multiplier.toFixed(2));
+                document.getElementById('multiplier').innerText = multiplier + 'x';
+
+                const spaceman = document.getElementById('spaceman');
+
+                if (multiplier > 1) {
+                    spaceman.classList.add('floating');
+                }
+
+                if (multiplier >= crashPoint) {
+                    clearInterval(interval);
+                    spaceman.classList.remove('floating');
+                    document.getElementById('hasil').innerText = '💥 Crash di ' + crashPoint + 'x. Anda kehilangan Rp ' + formatRupiah(currentBet);
+                    resetGame();
+                }
+            }, 50);
+        }
+
+        function tarikSetengah() {
+            let halfAmount = (currentBet * multiplier * 0.5).toFixed(0);
+            currentBet *= 0.5;
+            document.getElementById('hasil').innerText = '✅ Tarik Setengah: Rp ' + formatRupiah(halfAmount);
+        }
+
+        function tarikSemua() {
+            clearInterval(interval);
+            let winAmount = (currentBet * multiplier).toFixed(0);
+            document.getElementById('hasil').innerText = '✅ Tarik Semua: Rp ' + formatRupiah(winAmount);
+            resetGame();
+        }
+
+        function resetGame() {
+            document.getElementById('half-btn').disabled = true;
+            document.getElementById('all-btn').disabled = true;
+            document.getElementById('start-btn').disabled = false;
+        }
+
+        function startBot() {
+            const username = document.getElementById('username').value.trim();
+            if (!username) {
+                alert("Silakan masukkan Username Game terlebih dahulu!");
+                return;
+            }
+            const box = document.getElementById('bot-box');
+            box.innerHTML = '▣ Bot Active.....\n_connected to spaceman server...\n_creating timestamp...\n';
+
+            const now = new Date();
+            const wib = new Date(now.getTime() + (7 * 3600000));
+            let jam = wib.getHours();
+            let menit = wib.getMinutes();
+            let i = 0;
+
+            function tampilkanBaris() {
+                if (i >= 10) {
+                    box.innerHTML += '_successfull...';
+                    return;
+                }
+                const increment = Math.floor(Math.random() * 4) + 1;
+                menit += increment;
+                if (menit >= 60) {
+                    menit -= 60;
+                    jam = (jam + 1) % 24;
+                }
+                const timeStr = `${jam.toString().padStart(2, '0')}:${menit.toString().padStart(2, '0')}`;
+                const multiplier = (Math.random() * 17 + 3).toFixed(2);
+                box.innerHTML += `${timeStr} - Min ${multiplier}x ==> Cairkan\n`;
+                i++;
+                setTimeout(tampilkanBaris, 150);
+            }
+            tampilkanBaris();
+        }
+    </script>
+</body>
+</html>
